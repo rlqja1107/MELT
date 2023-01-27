@@ -1,0 +1,49 @@
+name: melt
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_kmp_llvm
+  - blas=1.0=mkl
+  - ca-certificates=2022.12.7=ha878542_0
+  - certifi=2022.12.7=pyhd8ed1ab_0
+  - cudatoolkit=11.3.1=h2bc3f7f_2
+  - ld_impl_linux-64=2.38=h1181459_1
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=12.2.0=h65d4601_19
+  - libstdcxx-ng=12.2.0=h46fd767_19
+  - libuv=1.44.2=h166bdaf_0
+  - libzlib=1.2.12=h166bdaf_2
+  - llvm-openmp=14.0.4=he0ac6c6_0
+  - mkl=2022.1.0=h84fe81f_915
+  - ncurses=6.3=h7f8727e_2
+  - openssl=1.1.1s=h0b41bf4_1
+  - pip=22.3.1=py39h06a4308_0
+  - python=3.9.12=h12debd9_1
+  - pytorch=1.10.0=py3.9_cuda11.3_cudnn8.2.0_0
+  - pytorch-mutex=1.0=cuda
+  - readline=8.1.2=h7f8727e_1
+  - setuptools=65.6.3=py39h06a4308_0
+  - sqlite=3.38.5=hc218d9a_0
+  - tbb=2021.7.0=h924138e_0
+  - tk=8.6.12=h1ccaba5_0
+  - typing_extensions=4.4.0=pyha770c72_0
+  - tzdata=2022g=h04d1e81_0
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.5=h7f8727e_1
+  - zlib=1.2.12=h7f8727e_2
+  - pip:
+    - cachetools==5.2.1
+    - numpy==1.21.2
+    - nvidia-ml-py==11.515.75
+    - nvitop==0.11.0
+    - pandas==1.3.4
+    - psutil==5.9.4
+    - python-dateutil==2.8.2
+    - pytz==2022.7.1
+    - six==1.16.0
+    - termcolor==2.2.0
+    - tqdm==4.64.1
+prefix: Put your installed path of anaconda
