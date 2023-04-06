@@ -1,5 +1,14 @@
 # **MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation**
 
+<p align="center">   
+    <a href="https://pytorch.org/" alt="PyTorch">
+      <img src="https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?e&logo=PyTorch&logoColor=white" /></a>
+    <a href="https://sigir.org/sigir2023/" alt="Conference">
+        <img src="https://img.shields.io/badge/SIGIR'23-lightgray" /></a>
+</p>
+
+The official source code for [MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation paper](https://github.com/rlqja1107/MELT), accepted at SIGIR 2023.
+
 ## **Main Figure**  
 <img src="figure/Main.png" width="300">
 
@@ -100,8 +109,8 @@ bash shell/MELT_FMLP/DATA.sh # DATA: Beauty, Behance, fsq, Music, Sports
 |Behance|0.1|0.3|200|50|
 
 
-
-
+### Cite
+TBD
 
 
 
