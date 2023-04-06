@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/badge/SIGIR'23-lightgray" /></a>
 </p>
 
-The official source code for [MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation paper](https://github.com/rlqja1107/MELT), accepted at SIGIR 2023.
+The official source code for [MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation paper](https://github.com/rlqja1107/MELT), accepted at SIGIR(full paper) 2023.
 
 ## **Main Figure**  
 <img src="figure/Main.png" width="300">
