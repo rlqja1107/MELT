@@ -9,8 +9,8 @@
 
 The official source code for [MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation paper](https://github.com/rlqja1107/MELT), accepted at SIGIR(full paper) 2023.
 
-## **Main Figure**  
-<img src="figure/Main.png" width="300">
+<!-- ## **Main Figure**  
+<img src="figure/Main.png" width="300"> -->
 
 ## **Data Preprocess**  
 
@@ -110,9 +110,15 @@ bash shell/MELT_FMLP/DATA.sh # DATA: Beauty, Behance, fsq, Music, Sports
 
 
 ### Cite
-TBD
-
-
-
+```  
+@misc{kim2023melt,
+      title={MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation}, 
+      author={Kibum Kim and Dongmin Hyun and Sukwon Yun and Chanyoung Park},
+      year={2023},
+      eprint={2304.08382},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR}
+}
+```
 
 
