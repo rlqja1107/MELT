@@ -111,13 +111,11 @@ bash shell/MELT_FMLP/DATA.sh # DATA: Beauty, Behance, fsq, Music, Sports
 
 ### Cite
 ```  
-@misc{kim2023melt,
-      title={MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation}, 
-      author={Kibum Kim and Dongmin Hyun and Sukwon Yun and Chanyoung Park},
-      year={2023},
-      eprint={2304.08382},
-      archivePrefix={arXiv},
-      primaryClass={cs.IR}
+@article{kim2023melt,
+  title={MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation},
+  author={Kim, Kibum and Hyun, Dongmin and Yun, Sukwon and Park, Chanyoung},
+  journal={arXiv preprint arXiv:2304.08382},
+  year={2023}
 }
 ```
 
