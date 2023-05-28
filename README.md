@@ -118,7 +118,6 @@ To train the model on **Behance** or **Foursquare** datasets, please run the **t
 
 ## **Inference**
 
-You can run the `test.sh` shell code, which exists for each model.  
 
 ### SASRec  
 ``` python  
