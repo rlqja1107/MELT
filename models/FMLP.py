@@ -18,8 +18,11 @@ import copy
 
 class Trainer(embedder):
 
-    def __init__(self, args):
-        self.logger = setupt_logger(args, f'log/{args.model}/{args.dataset}', name = args.model, filename = "log.txt")
+    def __init__(self, args, logger=None):
+        if logger is None:
+            self.logger = setupt_logger(args, f'log/{args.model}/{args.dataset}', name = args.model, filename = "log.txt")
+        else:
+            self.logger = logger
         self.logger.info(args)
         self.args = args
         embedder.__init__(self, args, self.logger)
@@ -101,6 +104,7 @@ class Trainer(embedder):
 
     
     def test(self):
+        set_random_seeds(self.args.seed)
         self.model = FMLPRec(self.args, self.item_num, self.device).to(self.device)
         self.inference_negative_sampler = NegativeSampler(self.args, self.dataset)
         
@@ -114,11 +118,12 @@ class Trainer(embedder):
         self.model.eval()
         
         # Evaluate
-        result_5 = self.evaluate(self.model, k=5, is_valid='test')
-        result_10 = self.evaluate(self.model, k=10, is_valid='test')
-        self.printer.refine_test_result(result_5, result_10)
-        self.printer.print_result()
-        
+        with torch.no_grad():
+            result_5 = self.evaluate(self.model, k=5, is_valid='test')
+            result_10 = self.evaluate(self.model, k=10, is_valid='test')
+            self.printer.refine_test_result(result_5, result_10)
+            self.printer.print_result()
+            
         
     def evaluate(self, model, k=10, is_valid='test'):
         """

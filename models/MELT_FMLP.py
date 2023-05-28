@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.utils.data as data_utils
 from embedder import embedder
 from src.sampler import NegativeSampler
+from models.FMLP import Trainer as Trainer_FMLP
 from src.utils import setupt_logger, set_random_seeds, Checker
 from src.data_FMLP import TrainData_FMLP, ValidData_FMLP, TestData_FMLP
 
@@ -27,7 +28,7 @@ class Trainer(embedder):
         set_random_seeds(self.args.seed)
         u_L_max = self.args.maxlen
         i_L_max = self.item_threshold + self.args.maxlen
-        self.model = MELT(self.args, self.item_num, self.device, u_L_max, i_L_max).to(self.device)
+        self.model = MELT(self.args, self.logger, self.item_num, self.device, u_L_max, i_L_max).to(self.device)
         self.inference_negative_sampler = NegativeSampler(self.args, self.dataset)
         
         # Build train, valid, test datasets
@@ -91,7 +92,6 @@ class Trainer(embedder):
                 with torch.no_grad():
                     self.model.eval()
                     result_valid = self.evaluate(self.model, k=10, is_valid="valid")
-                    print(f"Epoch:{epoch}, Valid (NDCG@10: {result_valid['Overall']['NDCG']:.4f}), HR@10: {result_valid['Overall']['HIT']:.4f})") # Remove
                     best_valid = self.validcheck(result_valid, epoch, self.model, f'{self.args.model}_{self.args.dataset}.pth')
            
             if epoch % 10 == 0:
@@ -127,7 +127,27 @@ class Trainer(embedder):
 
     
     def test(self):
-        print()
+        set_random_seeds(self.args.seed)
+        u_L_max = self.args.maxlen
+        i_L_max = self.item_threshold + self.args.maxlen
+        self.model = MELT(self.args, self.logger, self.item_num, self.device, u_L_max, i_L_max, True).to(self.device)
+        self.inference_negative_sampler = NegativeSampler(self.args, self.dataset)
+        
+        test_dataset = TestData_FMLP(self.args, None, self.train_data, self.test_data, self.valid_data, self.inference_negative_sampler)
+        self.test_loader = data_utils.DataLoader(test_dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=False)
+        self.printer = Checker(self.logger)
+        
+        # Take the pre-trained model
+        model_path = f"save_model/{self.args.dataset}/{self.args.model}_{self.args.dataset}.pth"
+        self.model.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))
+        self.model.eval()
+        
+        # Evaluate
+        with torch.no_grad():
+            result_5 = self.evaluate(self.model, k=5, is_valid='test')
+            result_10 = self.evaluate(self.model, k=10, is_valid='test')
+            self.printer.refine_test_result(result_5, result_10)
+            self.printer.print_result()
 
 
     def evaluate(self, model, k=10, is_valid="test"):
@@ -154,22 +174,18 @@ class Trainer(embedder):
 
         loader = self.test_loader if is_valid == "test" else self.valid_loader
         
-        for _, batch in enumerate(loader):
-            batch = tuple(t.to(self.device) for t in batch)
-            u, seq, test_idx, item_idx = batch
-            u = u.cpu(); test_idx = test_idx.cpu()
-            
+        for _, (u, seq, test_idx, item_idx) in enumerate(loader):
             u_head = (self.u_head_set[None, ...] == u.numpy()[...,None]).nonzero()[0]        # Index of head users
             u_tail = np.setdiff1d(np.arange(len(u)), u_head)                                 # Index of tail users
             i_head = (self.i_head_set[None, ...] == test_idx.numpy()[...,None]).nonzero()[0] # Index of head items
             i_tail = np.setdiff1d(np.arange(len(u)), i_head)                                 # Index of tail items
             
-            predictions = model(seq)
+            predictions = model(seq.to(self.device))
             predictions = predictions[:, -1, :]
             
             # Knowledge transfer to tail users
             predictions[u_tail] += model.user_branch.W_U(predictions)[u_tail] 
-            item_embs = model.item_embeddings(item_idx) 
+            item_embs = model.item_embeddings(item_idx.to(self.device)) 
 
             test_logits = torch.bmm(item_embs, predictions.unsqueeze(-1)).squeeze(-1)
             test_logits = -test_logits
@@ -195,7 +211,7 @@ class Trainer(embedder):
             TAIL_ITEM_NDCG += sum(ndcg[i_tail[hit_user[i_tail]]])
             HEAD_USER_NDCG += sum(ndcg[u_head[hit_user[u_head]]])
             TAIL_USER_NDCG += sum(ndcg[u_tail[hit_user[u_tail]]])
-
+            torch.cuda.empty_cache()
         result = {'Overall': {'NDCG': NDCG / n_all_user, 'HIT': HIT / n_all_user}, 
                 'Head_User': {'NDCG': HEAD_USER_NDCG / n_head_user, 'HIT': HEAD_USER_HIT / n_head_user},
                 'Tail_User': {'NDCG': TAIL_USER_NDCG / n_tail_user, 'HIT': TAIL_USER_HIT / n_tail_user},
@@ -324,9 +340,11 @@ class MELT(torch.nn.Module):
     """
     Revision of SASRec model
     """
-    def __init__(self, args, item_num, device, u_L_max, i_L_max):
+    def __init__(self, args, logger, item_num, device, u_L_max, i_L_max, test=False):
         super(MELT, self).__init__()
         self.args = args
+        self.logger = logger
+        self.test = test
         self.item_embeddings = nn.Embedding(item_num + 1 , args.hidden_units, padding_idx=0)
         self.position_embeddings = torch.nn.Embedding(args.maxlen, args.hidden_units)
         self.LayerNorm = LayerNorm(args.hidden_units, eps=1e-12)
@@ -334,15 +352,25 @@ class MELT(torch.nn.Module):
         self.item_encoder = Encoder(args)
         self.apply(self.init_weights)
         self.device = device
-        self.load_pretrained_model()
+        if not self.test:
+            self.load_pretrained_model()
         self.user_branch = USERBRANCH(self.args, self.device, u_L_max).to(self.device)
         self.item_branch = ITEMBRANCH(self.args, self.device, i_L_max).to(self.device)
         
         
     def load_pretrained_model(self):
-        model_path = f"save_model/{self.args.dataset}/FMLP_{self.args.dataset}.pth"
-        self.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))        
+        try:
+            model_path = f"save_model/{self.args.dataset}/FMLP_{self.args.dataset}.pth"
+            self.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))        
+        except:
+            self.logger.info("No trained model in path")
+            self.logger.info("Train the FMLP model")
+            fmlp = Trainer_FMLP(self.args, self.logger)
+            fmlp.train()
+            model_path = f"save_model/{self.args.dataset}/FMLP_{self.args.dataset}.pth"
+            self.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))
 
+         
 
     def update_item_tail_embedding(self, i_tail_loader, item_context):
         """

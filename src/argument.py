@@ -7,8 +7,8 @@ def str2bool(s):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', default='SASRec', choices=["SASRec", "FMLP", "MELT_SASRec", "MELT_FMLP"])
-    parser.add_argument('--dataset', default='Music', help="Datasets")
+    parser.add_argument('--model', default='MELT_FMLP', choices=["SASRec", "FMLP", "MELT_SASRec", "MELT_FMLP"])
+    parser.add_argument('--dataset', default='Automotive', help="Datasets")
     parser.add_argument('--batch_size', default=128, type=int, help="FMLP:256, SASRec: 128")
     parser.add_argument('--maxlen', default=50, type=int, help="Constrain the max length")
     parser.add_argument('--lr', default=0.001, type=float)

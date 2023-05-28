@@ -3,7 +3,8 @@ import numpy as np
 import torch
 import torch.utils.data as data_utils
 from embedder import embedder
-from models.SASRec import SASRec, Trainer
+from models.SASRec import SASRec
+from models.SASRec import Trainer as Trainer_SASRec
 from src.utils import setupt_logger, set_random_seeds, Checker
 from src.sampler import NegativeSampler
 from src.data import ValidData, TestData, TrainData
@@ -23,7 +24,7 @@ class Trainer(embedder):
         set_random_seeds(self.args.seed)
         u_L_max = self.args.maxlen
         i_L_max = self.item_threshold + 50
-        self.model = MELT(self.args, self.train_data, self.device, self.item_num, u_L_max, i_L_max).to(self.device)
+        self.model = MELT(self.args, self.logger, self.train_data, self.device, self.item_num, u_L_max, i_L_max).to(self.device)
         self.inference_negative_sampler = NegativeSampler(self.args, self.dataset)
         
         # Build the train, valid, test loader
@@ -100,14 +101,14 @@ class Trainer(embedder):
         set_random_seeds(self.args.seed)
         user_max_thres = self.args.maxlen
         item_max_thres = self.item_threshold + self.args.maxlen
-        self.model = MELT(self.args, self.train_data, self.device, self.item_num, user_max_thres, item_max_thres).to(self.device)
+        self.model = MELT(self.args, self.logger, self.train_data, self.device, self.item_num, user_max_thres, item_max_thres, test=True).to(self.device)
         self.inference_negative_sampler = NegativeSampler(self.args, self.dataset)
 
         test_dataset = TestData(self.args, self.item_context, self.train_data, self.test_data, self.valid_data, self.inference_negative_sampler)
         self.test_loader = data_utils.DataLoader(test_dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=False)
         self.printer = Checker(self.logger)
 
-        os.makedirs(f"save_model/{self.args.dataset}/{self.args.model}", exist_ok=True)
+        os.makedirs(f"save_model/{self.args.dataset}", exist_ok=True)
 
         model_path = f"save_model/{self.args.dataset}/{self.args.model}_{self.args.dataset}.pth"
         self.model.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))
@@ -187,15 +188,16 @@ class Trainer(embedder):
 
     
 class MELT(torch.nn.Module):
-    def __init__(self, args, train_data, device, item_num, u_L_max, i_L_max):
+    def __init__(self, args, logger, train_data, device, item_num, u_L_max, i_L_max, test=False):
         super(MELT, self).__init__()
         self.args = args
+        self.logger = logger
         self.device = device
         self.user_branch = USERBRANCH(self.args, device, u_L_max)
         self.item_branch = ITEMBRANCH(self.args, self.device, i_L_max)
         self.sasrec = SASRec(args, item_num)
-        
-        self.load_pretrained_model()
+        if not test:
+            self.load_pretrained_model()
         self.train_data = train_data
         self.bce_criterion = torch.nn.BCEWithLogitsLoss()
         
@@ -205,7 +207,9 @@ class MELT(torch.nn.Module):
             model_path = f"save_model/{self.args.dataset}/SASRec_{self.args.dataset}.pth"
             self.sasrec.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))
         except:
-            sasrec = Trainer(self.args)
+            self.logger.info("No trained model in path")
+            self.logger.info("Train the SASRec model")
+            sasrec = Trainer_SASRec(self.args, self.logger)
             sasrec.train()
             model_path = f"save_model/{self.args.dataset}/SASRec_{self.args.dataset}.pth"
             self.sasrec.load_state_dict(torch.load(model_path, map_location=torch.device(self.device)))

@@ -10,9 +10,12 @@ import torch.utils.data as data_utils
 
 class Trainer(embedder):
 
-    def __init__(self, args):
+    def __init__(self, args, logger=None):
         self.args = args
-        self.logger = setupt_logger(args, f'log/{args.model}/{args.dataset}', name = args.model, filename = f'log.txt')
+        if logger is None:
+            self.logger = setupt_logger(args, f'log/{args.model}/{args.dataset}', name = args.model, filename = f'log.txt')
+        else:
+            self.logger = logger
         embedder.__init__(self, args, self.logger)
         self.device = f'cuda:{args.gpu}' if torch.cuda.is_available() else "cpu"
         torch.cuda.set_device(self.device)
@@ -25,7 +28,7 @@ class Trainer(embedder):
         Train the model
         """
         set_random_seeds(self.args.seed)
-        self.logger.info(f"============Start Training=======================")
+        self.logger.info(f"============Start Training (SASRec)=======================")
         self.model = SASRec(self.args, self.item_num).to(self.device)
         self.init_param()
 
@@ -44,7 +47,6 @@ class Trainer(embedder):
         
         bce_criterion = torch.nn.BCEWithLogitsLoss()
         adam_optimizer = torch.optim.Adam(self.model.parameters(), lr=self.args.lr, betas=(0.9, 0.98))
-
         for epoch in range(1, self.args.e_max + 1):
             self.model.train()
             training_loss = 0.0
@@ -64,11 +66,10 @@ class Trainer(embedder):
             if epoch % 10 == 0:
                 print(f'Epoch: {epoch}, Evaluating: Dataset({self.args.dataset}), Model: ({self.args.model}), Training Loss: {training_loss:.3f}')
             
-            if epoch % 20 == 0:
+            if epoch % 5 == 0:
                 self.model.eval()
                 result_valid = self.evaluate(self.model, k=10, is_valid='valid')
                 best_valid = self.validcheck(result_valid, epoch, self.model, f'{self.args.model}_{self.args.dataset}.pth')
-
         # Evaluation
         with torch.no_grad():
             self.validcheck.best_model.eval()
@@ -81,7 +82,7 @@ class Trainer(embedder):
         folder = f"save_model/{self.args.dataset}"
         os.makedirs(folder, exist_ok=True)
         torch.save(self.validcheck.best_model.state_dict(), os.path.join(folder, self.validcheck.best_name))
-        self.validcheck.print_result(self.args.seed)
+        self.validcheck.print_result()
             
            
     def  init_param(self):
