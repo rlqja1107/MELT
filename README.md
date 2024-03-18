@@ -29,7 +29,7 @@ To the best of our knowledge, MELT is the first work that jointly alleviates the
 
 * [Amazon](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon/links.html): Download the raw datasets instead of "5-core" datasets.
 
-* [Behance](https://drive.google.com/drive/folders/0B9Ck8jw-TZUEc3NlMjVXdDlPU1k?resourcekey=0-6_8ykn0o4fLc5fuTEm91xA) : You can download the "Behance_appreciate_1M.gz" in the data explorer.
+* [Behance](https://datarepo.eng.ucsd.edu/mcauley_group/gdrive/behance/) : You can download the "Behance_appreciate_1M.gz" in the data explorer.
 
 * [Foursquare](https://archive.org/details/201309_foursquare_dataset_umn)   
  
