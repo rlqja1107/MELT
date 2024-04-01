@@ -170,10 +170,11 @@ To better understand the MELT framework, we provide the [algorithm](algorithm.md
 
 ## **Citation**  
 ```  
-@article{kim2023melt,
+@inproceedings{kim2023melt,
   title={MELT: Mutual Enhancement of Long-Tailed User and Item for Sequential Recommendation},
   author={Kim, Kibum and Hyun, Dongmin and Yun, Sukwon and Park, Chanyoung},
-  journal={arXiv preprint arXiv:2304.08382},
+  booktitle={Proceedings of the 46th international ACM SIGIR conference on Research and development in information retrieval},
+  pages={68--77},
   year={2023}
 }
 ```
